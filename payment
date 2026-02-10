@@ -1,0 +1,37 @@
+package hotel;
+
+import java.math.BigDecimal;
+ 
+import java.util.Date;
+
+public class Payment {
+ 
+    private final int orderId;
+ 
+    private final PaymentMethod method;
+ 
+    private final BigDecimal amountPaid;
+ 
+    private final BigDecimal change;
+ 
+    private final Date paidAt;
+
+    public Payment(int orderId, PaymentMethod method, BigDecimal amountPaid, BigDecimal change, Date paidAt) {
+ 
+        this.orderId = orderId; this.method = method; this.amountPaid = amountPaid; this.change = change; this.paidAt = paidAt;
+ 
+    }
+ 
+    public int getOrderId(){ return orderId; }
+ 
+    public PaymentMethod getMethod(){ return method; }
+ 
+    public BigDecimal getAmountPaid(){ return amountPaid; }
+ 
+    public BigDecimal getChange(){ return change; }
+ 
+    public Date getPaidAt(){ return paidAt; }
+ 
+}
+ 
+ 
