@@ -1,0 +1,18 @@
+package hotel;
+ 
+import java.util.*;
+ 
+public class Menu {
+    private final Map<Integer, MenuItem> items = new LinkedHashMap<>();
+    public void add(MenuItem m){ items.put(m.getId(), m); }
+    public MenuItem find(int id){ return items.get(id); }
+    public void printMenu(){
+        System.out.println("\n-- MENU --");
+        System.out.printf("%-6s %-24s %8s\n", "ID", "Item", "Price");
+        for (MenuItem m : items.values()) {
+            System.out.printf("%-6d %-24s %8.2f\n", m.getId(), m.getName(), m.getPrice());
+        }
+    }
+}
+ 
+ 
