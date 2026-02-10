@@ -1,0 +1,4 @@
+package hotel;
+ 
+public enum PaymentMethod{ CASH, CARD, UPI }
+ 
