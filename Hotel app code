@@ -1,0 +1,388 @@
+package hotel;
+
+import java.util.*;
+ 
+import java.math.BigDecimal;
+ 
+import java.math.RoundingMode;
+
+
+public class HotelApp {
+
+    private static final Scanner SC = new Scanner(System.in);
+ 
+    private final Menu menu = new Menu();
+ 
+    private final Map<Integer, Order> orders = new LinkedHashMap<>();
+ 
+    private int nextOrderId = 1;
+
+    public static void main(String[] args) {
+ 
+        new HotelApp().run();
+ 
+    }
+
+    private void run() {
+ 
+        seedMenu();
+ 
+        println("\n=== HOTEL MANAGEMENT — ORDERS, PAYMENT & TIP (Java CLI) ===\n");
+ 
+        boolean loop = true;
+ 
+        while (loop) {
+ 
+            showMain();
+ 
+            int choice = readInt("Choose option: ");
+ 
+            switch (choice) {
+ 
+                case 1 : menu.printMenu();
+ 
+                case 2 : createOrder();
+ 
+                case 3 : viewOrders();
+ 
+                case 4 : addOrUpdateTip();
+ 
+                case 5 : checkout();
+ 
+                case 6 : printReceipt();
+ 
+                case 7 : { loop = false; println("Bye!"); }
+ 
+                default : println("Invalid option.");
+ 
+            }
+ 
+        }
+ 
+    }
+
+    private void showMain() {
+ 
+        println("\n1) View Menu");
+ 
+        println("2) Create New Order");
+ 
+        println("3) View Orders");
+ 
+        println("4) Add/Update Tip for an Order");
+ 
+        println("5) Checkout / Pay for an Order");
+ 
+        println("6) Print Receipt for an Order");
+ 
+        println("7) Exit");
+ 
+    }
+
+    private void seedMenu() {
+ 
+        menu.add(new MenuItem(101, "Masala Dosa", bd("80")));
+ 
+        menu.add(new MenuItem(102, "Paneer Tikka", bd("180")));
+ 
+        menu.add(new MenuItem(103, "Veg Biryani", bd("160")));
+ 
+        menu.add(new MenuItem(104, "Chicken Biryani", bd("220")));
+ 
+        menu.add(new MenuItem(105, "Dal Tadka", bd("130")));
+ 
+        menu.add(new MenuItem(201, "Tea", bd("20")));
+ 
+        menu.add(new MenuItem(202, "Coffee", bd("40")));
+ 
+        menu.add(new MenuItem(203, "Lassi", bd("60")));
+ 
+        menu.add(new MenuItem(301, "Gulab Jamun", bd("50")));
+ 
+    }
+
+    /* =========================
+ 
+       CREATE ORDER (UPDATED)
+ 
+       ========================= */
+ 
+    private void createOrder() {
+ 
+        println("\n-- Create New Order --");
+ 
+        String customer = readLine("Customer/Room (text): ");
+ 
+        Order order = new Order(nextOrderId++, customer);
+
+        while (true) {
+ 
+            menu.printMenu();
+ 
+            println("Enter item(s):");
+ 
+            println(" • Single : 101");
+ 
+            println(" • Multiple : 101x2,102x1,203x3");
+ 
+            String input = readLine("Enter Item ID(s) (0 to finish): ").trim();
+
+            if (input.equals("0")) break;
+
+            // Single item flow (old behavior kept)
+ 
+            if (input.matches("\\d+")) {
+ 
+                int id = Integer.parseInt(input);
+ 
+                MenuItem item = menu.find(id);
+ 
+                if (item == null) { println("Item not found."); continue; }
+ 
+                int qty = readInt("Quantity: ");
+ 
+                if (qty <= 0) { println("Invalid quantity."); continue; }
+ 
+                order.addItem(new OrderItem(item, qty));
+ 
+                println("Added: " + item.getName() + " x " + qty);
+ 
+                continue;
+ 
+            }
+
+            // Multiple items flow
+ 
+            String[] parts = input.split(",");
+ 
+            for (String p : parts) {
+ 
+                try {
+ 
+                    String[] pair = p.trim().toLowerCase().split("x");
+ 
+                    int id = Integer.parseInt(pair[0].trim());
+ 
+                    int qty = Integer.parseInt(pair[1].trim());
+ 
+                    if (qty <= 0) throw new Exception();
+
+                    MenuItem item = menu.find(id);
+ 
+                    if (item == null) {
+ 
+                        println("Item not found: " + id);
+ 
+                        continue;
+ 
+                    }
+ 
+                    order.addItem(new OrderItem(item, qty));
+ 
+                    println("Added: " + item.getName() + " x " + qty);
+ 
+                } catch (Exception e) {
+ 
+                    println("Invalid format: " + p);
+ 
+                }
+ 
+            }
+ 
+        }
+
+        if (order.getItems().isEmpty()) {
+ 
+            println("Order is empty. Not saved.");
+ 
+            return;
+ 
+        }
+ 
+        orders.put(order.getId(), order);
+ 
+        println("Order created with ID: " + order.getId());
+ 
+    }
+
+    private void viewOrders() {
+ 
+        println("\n-- Current Orders --");
+ 
+        if (orders.isEmpty()) { println("No orders."); return; }
+ 
+        for (Order o : orders.values()) println(o.summaryLine());
+ 
+    }
+
+    private void addOrUpdateTip() {
+ 
+        int id = readInt("Order ID: ");
+ 
+        Order o = orders.get(id);
+ 
+        if (o == null) { println("Not found."); return; }
+ 
+        if (o.isPaid()) { println("Already paid; cannot change tip."); return; }
+
+        println("1) Percentage  2) Flat Amount");
+ 
+        int t = readInt("Choose tip type: ");
+ 
+        if (t == 1) {
+ 
+            o.setTipPercent(readMoney("Tip %: "));
+ 
+            o.setTipFlat(null);
+ 
+        } else if (t == 2) {
+ 
+            o.setTipFlat(readMoney("Tip amount: "));
+ 
+            o.setTipPercent(null);
+ 
+        } else {
+ 
+            println("Invalid.");
+ 
+            return;
+ 
+        }
+ 
+        println("Tip updated. " + o.totalsString());
+ 
+    }
+
+    /* =========================
+ 
+       CHECKOUT (CARD UPDATED)
+ 
+       ========================= */
+ 
+    private void checkout() {
+ 
+        int id = readInt("Order ID to pay: ");
+ 
+        Order o = orders.get(id);
+ 
+        if (o == null || o.isPaid()) { println("Invalid order."); return; }
+
+        println(o.totalsString());
+ 
+        println("Payment Methods: 1) CASH  2) CARD  3) UPI");
+ 
+        int m = readInt("Choose: ");
+
+        PaymentMethod method = (m == 1) ? PaymentMethod.CASH :
+ 
+                                (m == 2) ? PaymentMethod.CARD :
+ 
+                                (m == 3) ? PaymentMethod.UPI : null;
+ 
+        if (method == null) { println("Invalid method."); return; }
+
+        BigDecimal total = o.total();
+ 
+        BigDecimal paid = total;
+ 
+        BigDecimal change = bd("0");
+
+        if (method == PaymentMethod.CASH) {
+ 
+            paid = readMoney("Cash received: ");
+ 
+            if (paid.compareTo(total) < 0) {
+ 
+                println("Insufficient cash.");
+ 
+                return;
+ 
+            }
+ 
+            change = paid.subtract(total);
+ 
+        }
+
+        if (method == PaymentMethod.CARD) {
+ 
+            String last4;
+ 
+            do {
+ 
+                last4 = readLine("Enter last 4 digits of card: ");
+ 
+            } while (!last4.matches("\\d{4}"));
+
+            String pin;
+ 
+            do {
+ 
+                pin = readLine("Enter 4-digit PIN: ");
+ 
+            } while (!pin.matches("\\d{4}"));
+
+            println("Card ****" + last4 + " verified. Payment approved.");
+ 
+        }
+
+        Payment p = new Payment(o.getId(), method, paid, change, new Date());
+ 
+        o.markPaid(p);
+ 
+        println("Payment successful. Change: Rs " +
+ 
+                change.setScale(2, RoundingMode.HALF_UP));
+ 
+    }
+
+    private void printReceipt() {
+ 
+        int id = readInt("Order ID: ");
+ 
+        Order o = orders.get(id);
+ 
+        if (o == null) { println("Not found."); return; }
+ 
+        println("\n" + o.receipt());
+ 
+    }
+
+    // ===== Helpers =====
+ 
+    private static int readInt(String p) {
+ 
+        while (true) {
+ 
+            System.out.print(p);
+ 
+            try { return Integer.parseInt(SC.nextLine().trim()); }
+ 
+            catch (Exception e) { System.out.println("Enter valid number."); }
+ 
+        }
+ 
+    }
+ 
+    private static String readLine(String p){ System.out.print(p); return SC.nextLine(); }
+ 
+    private static BigDecimal readMoney(String p){
+ 
+        while (true) {
+ 
+            System.out.print(p);
+ 
+            try { return new BigDecimal(SC.nextLine().trim()); }
+ 
+            catch (Exception e) { System.out.println("Enter valid amount."); }
+ 
+        }
+ 
+    }
+ 
+    private static void println(String s){ System.out.println(s); }
+ 
+    private static BigDecimal bd(String v){ return new BigDecimal(v); }
+ 
+}
+
+ 
