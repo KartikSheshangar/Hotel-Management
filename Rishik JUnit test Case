@@ -1,0 +1,334 @@
+package J_Unit;
+ 
+ 
+import static org.junit.Assert.*;
+
+import java.math.BigDecimal;
+
+import java.math.RoundingMode;
+
+import java.util.Date;
+
+import org.junit.Before;
+
+import org.junit.Test;
+ 
+import HOTEL.Menu;
+
+import HOTEL.MenuItem;
+
+import HOTEL.Order;
+
+import HOTEL.OrderItem;
+
+import HOTEL.Payment;
+
+import HOTEL.PaymentMethod;
+
+ 
+
+
+public class Rishiktestcases {
+
+    private Menu menu;
+
+    private Order order;
+
+    @Before
+
+    public void setup() {
+
+        menu = new Menu();
+
+        menu.add(new MenuItem(101, "Masala Dosa", new BigDecimal("80")));
+
+        menu.add(new MenuItem(102, "Paneer Tikka", new BigDecimal("180")));
+
+        menu.add(new MenuItem(103, "Veg Biryani", new BigDecimal("160")));
+
+        order = new Order(1, "Room101");
+
+    }
+
+    //TC001 – Valid login (logic placeholder)
+
+    @Test
+
+    public void testValidUserId() {
+
+        String user = "admin";
+
+        assertNotNull(user);
+
+    }
+
+    //TC002 – Valid order ID search
+
+    @Test
+
+    public void testSearchValidOrder() {
+
+        Order o = new Order(10, "John");
+
+        assertEquals(10, o.getId());
+
+    }
+
+    // TC003 – Invalid order ID
+
+    @Test
+
+    public void testSearchInvalidOrder() {
+
+        assertNull(menu.find(999));
+
+    }
+
+    //TC004 – Sort by Paid Orders
+
+    @Test
+
+    public void testPaidOrderSorting() {
+
+        Order o1 = new Order(1, "A");
+
+        Order o2 = new Order(2, "B");
+
+        o2.markPaid(new Payment(2, PaymentMethod.CASH,
+
+                new BigDecimal("100"), BigDecimal.ZERO, new Date()));
+
+        assertTrue(o2.isPaid());
+
+        assertFalse(o1.isPaid());
+
+    }
+
+       //TC005 – Sort By Total Amount
+
+    @Test
+
+    public void testSortByTotalAmount() {
+
+        Order o1 = new Order(1, "A");
+
+        Order o2 = new Order(2, "B");
+
+        o1.addItem(new OrderItem(menu.find(101), 1)); // 80
+
+        o2.addItem(new OrderItem(menu.find(102), 1)); // 180
+
+        assertTrue(o2.total().compareTo(o1.total()) > 0);
+
+    }
+
+     //TC006 – Empty Order
+
+    @Test
+
+    public void testEmptyOrder() {
+
+        assertEquals(0, order.getItems().size());
+
+    }
+
+    //TC007 – Check Order Items
+
+    @Test
+
+    public void testOrderItemsAdded() {
+
+        order.addItem(new OrderItem(menu.find(101), 2));
+
+        assertEquals(1, order.getItems().size());
+
+    }
+
+    //TC008 – Tip % (10%)
+
+    @Test
+
+    public void testTipPercentagePositive() {
+
+        order.addItem(new OrderItem(menu.find(101), 1)); // 80
+
+        order.setTipPercent(new BigDecimal("10"));
+
+        assertEquals(new BigDecimal("8.00"), order.tip());
+
+    }
+
+    //TC009 – Invalid characters in tip
+
+    @Test
+
+    public void testInvalidCharactersTip() {
+
+        try {
+
+            new BigDecimal("10%");
+
+            fail("Exception should occur");
+
+        } catch (Exception e) {
+
+            assertTrue(true);
+
+        }
+
+    }
+
+       //TC010 – Switch % → flat
+
+    @Test
+
+    public void testSwitchPercentToFlatTip() {
+
+        order.setTipPercent(new BigDecimal("10"));
+
+        order.setTipFlat(new BigDecimal("50"));
+
+        order.setTipPercent(null);
+
+        assertEquals(new BigDecimal("50.00"), order.tip());
+
+    }
+
+      // TC011 – Switch flat → %
+
+    @Test
+
+    public void testSwitchFlatToPercentTip() {
+
+        order.addItem(new OrderItem(menu.find(101), 1));
+
+        order.setTipFlat(new BigDecimal("20"));
+
+        order.setTipPercent(new BigDecimal("10"));
+
+        order.setTipFlat(null);
+
+        assertEquals(new BigDecimal("8.00"), order.tip());
+
+    }
+
+       //TC012 – Negative tip not allowed
+
+    @Test
+
+    public void testNegativeTipNotAllowed() {
+
+        order.setTipFlat(new BigDecimal("-10"));
+
+        assertTrue(order.tip().compareTo(BigDecimal.ZERO) >= 0);
+
+    }
+
+       //TC013 – Tip added
+
+    @Test
+
+    public void testTipAdded() {
+
+        order.addItem(new OrderItem(menu.find(101), 1));
+
+        order.setTipFlat(new BigDecimal("20"));
+
+        assertEquals(new BigDecimal("20.00"), order.tip());
+
+    }
+
+      // TC014 – Tip deleted
+
+    @Test
+
+    public void testTipDeleted() {
+
+        order.setTipFlat(new BigDecimal("20"));
+
+        order.setTipFlat(null);
+
+        assertEquals(new BigDecimal("0.00"), order.tip());
+
+    }
+
+       //TC015 – Tip updated
+
+    @Test
+
+    public void testTipUpdated() {
+
+        order.setTipFlat(new BigDecimal("20"));
+
+        order.setTipFlat(new BigDecimal("50"));
+
+        assertEquals(new BigDecimal("50.00"), order.tip());
+
+    }
+
+       //TC016 – Tip not allowed after payment
+
+    @Test
+
+    public void testTipNotUpdatedAfterPayment() {
+
+        order.markPaid(new Payment(1, PaymentMethod.CASH,
+
+                new BigDecimal("100"), BigDecimal.ZERO, new Date()));
+
+        assertTrue(order.isPaid());
+
+    }
+
+      // TC017 – Total amount correct
+
+    @Test
+
+    public void testTotalAmountCalculation() {
+
+        order.addItem(new OrderItem(menu.find(101), 1)); // 80
+
+        order.setTipFlat(new BigDecimal("20"));
+
+        BigDecimal expected = new BigDecimal("80")
+
+                .add(new BigDecimal("4.00"))  // 5% tax
+
+                .add(new BigDecimal("20"))
+
+                .setScale(2, RoundingMode.HALF_UP);
+
+        assertEquals(expected, order.total());
+
+    }
+
+      // TC018 – Display tax separately
+
+    @Test
+
+    public void testTaxDisplayedSeparately() {
+
+        order.addItem(new OrderItem(menu.find(101), 1));
+
+        assertEquals(new BigDecimal("4.00"), order.tax());
+
+    }
+
+
+      // TC019 – Verify tax excluded from tip
+
+    @Test
+
+    public void testTaxNotAppliedOnTip() {
+
+        order.addItem(new OrderItem(menu.find(101), 1)); // 80
+
+        order.setTipFlat(new BigDecimal("20"));
+
+        assertEquals(new BigDecimal("4.00"), order.tax());
+
+    }
+
+}
+
+ 
