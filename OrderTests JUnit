@@ -1,0 +1,72 @@
+package J_Unit;
+ 
+import static org.junit.Assert.*; 
+
+import java.math.BigDecimal;
+ 
+import org.junit.Test;
+ 
+import HOTEL.MenuItem;
+
+import HOTEL.Order;
+
+import HOTEL.OrderItem;
+ 
+ 
+public class OrderTests {
+ 
+    @Test
+
+    public void testSubtotalTaxTipTotal_NoTip() {
+
+        Order o = new Order(1, "Room 101");
+
+        MenuItem mi = new MenuItem(101, "Dosa", new BigDecimal("100"));
+
+        o.addItem(new OrderItem(mi, 2)); // 200
+ 
+        assertEquals(new BigDecimal("200.00"), o.subtotal());
+
+        assertEquals(new BigDecimal("10.00"), o.tax());  // 5%
+
+        assertEquals(new BigDecimal("0.00"), o.tip());
+
+        assertEquals(new BigDecimal("210.00"), o.total());
+
+    }
+ 
+    @Test
+
+    public void testTipFlat() {
+
+        Order o = new Order(1, "Room 101");
+
+        MenuItem mi = new MenuItem(101, "Dosa", new BigDecimal("100"));
+
+        o.addItem(new OrderItem(mi, 1)); // 100
+ 
+        o.setTipFlat(new BigDecimal("20"));
+ 
+        assertEquals(new BigDecimal("20.00"), o.tip());
+
+    }
+ 
+    @Test
+
+    public void testTipPercent() {
+
+        Order o = new Order(1, "Room 101");
+
+        MenuItem mi = new MenuItem(101, "Dosa", new BigDecimal("100"));
+
+        o.addItem(new OrderItem(mi, 1));
+ 
+        o.setTipPercent(new BigDecimal("10"));
+ 
+        assertEquals(new BigDecimal("10.00"), o.tip());
+
+    }
+
+}
+
+ 
