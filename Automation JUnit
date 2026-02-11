@@ -1,0 +1,48 @@
+package J_Unit;
+ 
+import static org.junit.Assert.*; 
+
+import java.math.BigDecimal;
+
+import org.junit.Test;
+ 
+import HOTEL.MenuItem;
+
+import HOTEL.OrderItem;
+ 
+public class OrderItemTests {
+ 
+    @Test
+
+    public void testLineTotal() {
+
+        MenuItem mi = new MenuItem(101, "Masala Dosa", new BigDecimal("80"));
+
+        OrderItem oi = new OrderItem(mi, 2);
+
+        assertEquals(new BigDecimal("160"), oi.lineTotal());
+
+    }
+ 
+    @Test(expected = IllegalArgumentException.class)
+
+    public void testInvalidQuantityZero() {
+
+        MenuItem mi = new MenuItem(101, "Masala Dosa", new BigDecimal("80"));
+
+        new OrderItem(mi, 0);
+
+    }
+ 
+    @Test(expected = IllegalArgumentException.class)
+
+    public void testInvalidQuantityNegative() {
+
+        MenuItem mi = new MenuItem(101, "Masala Dosa", new BigDecimal("80"));
+
+        new OrderItem(mi, -5);
+
+    }
+
+}
+ 
