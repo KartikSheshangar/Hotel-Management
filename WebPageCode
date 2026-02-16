@@ -1,0 +1,447 @@
+ 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hotel Management — Orders, Payment & Tip</title>
+ 
+  <style>
+    :root{
+      --bg:#0b1220;
+      --card:#121a2b;
+      --muted:#9fb0d0;
+      --text:#eaf0ff;
+      --accent:#4aa3ff;
+      --ok:#37d67a;
+      --warn:#ffcc00;
+      --bad:#ff4d4d;
+      --border:rgba(255,255,255,0.10);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:
+        radial-gradient(1200px 600px at 10% 5%, rgba(74,163,255,.22), transparent 45%),
+        radial-gradient(900px 500px at 90% 15%, rgba(55,214,122,.16), transparent 40%),
+        var(--bg);
+      color:var(--text);
+    }
+    header{
+      padding:22px 18px;
+      border-bottom:1px solid var(--border);
+      background:rgba(18,26,43,0.55);
+      backdrop-filter: blur(10px);
+      position:sticky;
+      top:0;
+      z-index:10;
+    }
+    header h1{
+      margin:0 0 6px 0;
+      font-size:20px;
+      letter-spacing:.3px;
+    }
+    header p{
+      margin:0;
+      color:var(--muted);
+      font-size:13px;
+    }
+    nav.top-nav{
+      margin-top:10px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    nav.top-nav a{
+      color:var(--text);
+      text-decoration:none;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,0.05);
+      font-size:12px;
+    }
+    nav.top-nav a:hover{filter:brightness(1.05)}
+ 
+    .wrap{
+      max-width:1150px;
+      margin:0 auto;
+      padding:18px;
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap:16px;
+    }
+    @media (max-width: 980px){
+      .wrap{grid-template-columns:1fr}
+      header{position:static}
+    }
+    .card{
+      background: linear-gradient(180deg, rgba(18,26,43,0.95), rgba(18,26,43,0.75));
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:14px;
+      box-shadow: 0 12px 35px rgba(0,0,0,.35);
+    }
+    .card h2{
+      margin:0 0 10px 0;
+      font-size:15px;
+      color:#dce6ff;
+      letter-spacing:.2px;
+    }
+    .row{display:flex; gap:10px; flex-wrap:wrap;}
+    .row > *{flex:1}
+    .grid2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+    @media (max-width: 640px){
+      .grid2{grid-template-columns:1fr}
+    }
+    label{
+      display:block;
+      font-size:12px;
+      color:var(--muted);
+      margin:6px 0;
+    }
+    input, select, textarea{
+      width:100%;
+      background: rgba(255,255,255,0.06);
+      border:1px solid var(--border);
+      color:var(--text);
+      padding:10px;
+      border-radius:10px;
+      outline:none;
+    }
+    textarea{min-height:90px; resize:vertical}
+    button{
+      cursor:pointer;
+      border:none;
+      background: var(--accent);
+      color:#001528;
+      font-weight:700;
+      padding:10px 12px;
+      border-radius:10px;
+      transition:.15s ease;
+    }
+    button:hover{filter:brightness(1.05)}
+    button.secondary{
+      background: rgba(255,255,255,0.12);
+      color: var(--text);
+      border:1px solid var(--border);
+      font-weight:600;
+    }
+    button.danger{
+      background: rgba(255,77,77,.9);
+      color:white;
+    }
+    .muted{color:var(--muted)}
+    .small{font-size:12px}
+    .pill{
+      display:inline-block;
+      padding:4px 8px;
+      border-radius:999px;
+      background: rgba(255,255,255,.08);
+      border:1px solid var(--border);
+      font-size:12px;
+      color:var(--muted);
+    }
+    table{
+      width:100%;
+      border-collapse: collapse;
+      overflow:hidden;
+      border-radius:12px;
+    }
+    th, td{
+      padding:10px 8px;
+      border-bottom:1px solid var(--border);
+      font-size:13px;
+      vertical-align:top;
+    }
+    th{
+      text-align:left;
+      color:var(--muted);
+      font-weight:600;
+      font-size:12px;
+    }
+    tr:hover td{background: rgba(255,255,255,0.03)}
+    .right{text-align:right}
+    .status-open{color:var(--warn); font-weight:800}
+    .status-paid{color:var(--ok); font-weight:800}
+    pre{
+      background: rgba(0,0,0,0.35);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:12px;
+      overflow:auto;
+      line-height:1.35;
+      font-size:12px;
+      color:#eaf0ff;
+      white-space:pre-wrap;
+      margin:0;
+    }
+    .toast{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,0.06);
+      font-size:13px;
+      display:none;
+    }
+    .toast.ok{border-color:rgba(55,214,122,.35)}
+    .toast.bad{border-color:rgba(255,77,77,.4)}
+    hr{
+      border:0;
+      border-top:1px solid var(--border);
+      margin:14px 0;
+    }
+    .btn-row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .btn-row button{flex:1}
+  </style>
+</head>
+ 
+<body>
+ 
+  <!-- HEADER (Selenium locators everywhere) -->
+  <header id="hdrApp" class="app-header" data-testid="header-app" aria-label="Hotel App Header">
+    <h1 id="hdrTitle" class="title" data-testid="header-title">Hotel Management — Orders, Payment & Tip</h1>
+    <p id="hdrDesc" class="subtitle" data-testid="header-desc">
+      Web version of your Java CLI: Menu → Orders → Tip → Checkout → Receipt (Tax 5% • Negative tips blocked)
+    </p>
+ 
+    <!-- Links added so you can use By.linkText and By.partialLinkText -->
+    <nav id="topNav" class="top-nav" data-testid="top-nav" aria-label="Top Navigation">
+      <a id="lnkMenu" href="#menuSection" data-testid="link-menu">Menu</a>
+      <a id="lnkOrders" href="#ordersSection" data-testid="link-orders">Orders</a>
+      <a id="lnkReceipt" href="#receiptSection" data-testid="link-receipt">Receipt</a>
+    </nav>
+  </header>
+ 
+  <div id="mainWrap" class="wrap" data-testid="wrap-main" aria-label="Main Layout">
+ 
+    <!-- LEFT COLUMN -->
+    <section id="leftCol" class="card" data-testid="col-left" aria-label="Left Column">
+ 
+      <!-- MENU -->
+      <section id="menuSection" class="menu-card" data-testid="section-menu" aria-label="Menu Section">
+        <div class="row" style="align-items:center; justify-content:space-between;">
+          <h2 id="menuTitle" data-testid="menu-title" style="margin:0;">Menu</h2>
+          <span id="pillTaxRate" class="pill" data-testid="pill-tax-rate" aria-label="Tax Rate">Tax: 5%</span>
+        </div>
+ 
+        <div id="menuTableWrap" data-testid="menu-table-wrap" style="margin-top:10px; overflow:auto;">
+          <table id="menuTable" class="tbl tbl-menu" data-testid="table-menu" aria-label="Menu Table">
+            <thead id="menuThead" data-testid="thead-menu">
+              <tr>
+                <th id="thMenuId" data-testid="th-menu-id" style="width:90px;">ID</th>
+                <th id="thMenuItem" data-testid="th-menu-item">Item</th>
+                <th id="thMenuPrice" data-testid="th-menu-price" class="right" style="width:120px;">Price (Rs)</th>
+              </tr>
+            </thead>
+            <tbody id="menuTbody" data-testid="tbody-menu"></tbody>
+          </table>
+        </div>
+      </section>
+ 
+      <hr />
+ 
+      <!-- CREATE ORDER -->
+      <section id="createOrderSection" class="create-card" data-testid="section-create-order" aria-label="Create Order Section">
+        <h2 id="createTitle" data-testid="create-title">Create New Order</h2>
+ 
+        <div id="createInputs" class="grid2" data-testid="create-inputs">
+          <div>
+            <label id="lblCustomerRef" data-testid="label-customer" for="customerRef">Customer / Room</label>
+            <input
+              id="customerRef"
+              name="customerRef"
+              class="input input-customer"
+              data-testid="input-customer"
+              aria-label="Customer Reference"
+              placeholder="e.g., Room 203 / Parth"
+              autocomplete="off"
+            />
+          </div>
+ 
+          <div>
+            <label id="lblItemInput" data-testid="label-items" for="itemInput">Item ID(s)</label>
+            <input
+              id="itemInput"
+              name="itemInput"
+              class="input input-items"
+              data-testid="input-items"
+              aria-label="Item IDs Input"
+              placeholder="Single: 101  |  Multiple: 101x2,102x1,203x3"
+              autocomplete="off"
+            />
+          </div>
+        </div>
+ 
+        <div id="draftButtons" class="btn-row" data-testid="draft-buttons" aria-label="Draft Buttons">
+          <button id="btnAddDraft" name="btnAddDraft" class="btn btn-primary" data-testid="btn-add-draft" aria-label="Add to Draft">
+            Add to Draft
+          </button>
+          <button id="btnClearDraft" name="btnClearDraft" class="btn btn-secondary secondary" data-testid="btn-clear-draft" aria-label="Clear Draft">
+            Clear Draft
+          </button>
+          <button id="btnDemoOrder" name="btnDemoOrder" class="btn btn-secondary secondary" data-testid="btn-demo-order" aria-label="Demo Order">
+            Demo Order
+          </button>
+          <button id="btnCreateOrder" name="btnCreateOrder" class="btn btn-primary" data-testid="btn-create-order" aria-label="Create Order">
+            Create Order
+          </button>
+        </div>
+ 
+        <div class="row" style="align-items:center; justify-content:space-between; margin-top:10px;">
+          <span id="draftCount" class="pill" data-testid="draft-count" aria-label="Draft item count">(0 item(s))</span>
+          <span id="draftHint" class="muted small" data-testid="draft-hint" aria-label="Draft hint">
+            Tip: enter multiple like <b>101x2,102x1</b>
+          </span>
+        </div>
+ 
+        <div id="draftTableWrap" data-testid="draft-table-wrap" style="margin-top:10px; overflow:auto;">
+          <table id="draftTable" class="tbl tbl-draft" data-testid="table-draft" aria-label="Draft Items Table">
+            <thead id="draftThead" data-testid="thead-draft">
+              <tr>
+                <th id="thDraftItem" data-testid="th-draft-item">Item</th>
+                <th id="thDraftQty" data-testid="th-draft-qty" class="right" style="width:80px;">Qty</th>
+                <th id="thDraftAmount" data-testid="th-draft-amount" class="right" style="width:120px;">Amount</th>
+                <th id="thDraftAction" data-testid="th-draft-action" class="right" style="width:110px;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="draftTbody" data-testid="tbody-draft"></tbody>
+          </table>
+        </div>
+ 
+        <div id="msgLeft" class="toast" data-testid="toast-left" aria-live="polite"></div>
+      </section>
+ 
+      <hr />
+ 
+      <!-- ORDERS -->
+      <section id="ordersSection" class="orders-card" data-testid="section-orders" aria-label="Orders Section">
+        <h2 id="ordersTitle" data-testid="orders-title">Orders</h2>
+ 
+        <div id="ordersTableWrap" data-testid="orders-table-wrap" style="overflow:auto;">
+          <table id="ordersTable" class="tbl tbl-orders" data-testid="table-orders" aria-label="Orders Table">
+            <thead id="ordersThead" data-testid="thead-orders">
+              <tr>
+                <th id="thOrderId" data-testid="th-order-id" style="width:70px;">ID</th>
+                <th id="thOrderCustomer" data-testid="th-order-customer">Customer</th>
+                <th id="thOrderSubtotal" data-testid="th-order-subtotal" class="right">Subtotal</th>
+                <th id="thOrderTip" data-testid="th-order-tip" class="right">Tip</th>
+                <th id="thOrderTotal" data-testid="th-order-total" class="right">Total</th>
+                <th id="thOrderStatus" data-testid="th-order-status" style="width:92px;">Status</th>
+                <th id="thOrderAction" data-testid="th-order-action" style="width:120px;"></th>
+              </tr>
+            </thead>
+            <tbody id="ordersTbody" data-testid="tbody-orders"></tbody>
+          </table>
+        </div>
+      </section>
+ 
+    </section>
+ 
+    <!-- RIGHT COLUMN -->
+    <aside id="sidePanel" class="card side-card" data-testid="panel-selected" aria-label="Selected Order Panel">
+ 
+      <!-- SELECTED -->
+      <section id="selectedSection" data-testid="section-selected" aria-label="Selected Order Section">
+        <h2 id="selectedTitle" data-testid="selected-title">Selected Order</h2>
+ 
+        <div class="row" data-testid="selected-row-1">
+          <div>
+            <label for="selectedId" data-testid="label-selected-id">Order ID</label>
+            <input id="selectedId" name="selectedId" class="input" data-testid="input-selected-id" aria-label="Selected Order ID" readonly />
+          </div>
+          <div>
+            <label for="selectedStatus" data-testid="label-selected-status">Status</label>
+            <input id="selectedStatus" name="selectedStatus" class="input" data-testid="input-selected-status" aria-label="Selected Order Status" readonly />
+          </div>
+        </div>
+ 
+        <label for="selectedTotals" data-testid="label-selected-totals">Totals</label>
+        <textarea id="selectedTotals" name="selectedTotals" class="textarea" data-testid="textarea-selected-totals" aria-label="Selected Order Totals" readonly></textarea>
+      </section>
+ 
+      <hr />
+ 
+      <!-- TIP -->
+      <section id="tipSection" data-testid="section-tip" aria-label="Tip Section">
+        <h2 id="tipTitle" data-testid="tip-title">Add / Update Tip</h2>
+ 
+        <div class="row" data-testid="tip-row">
+          <div>
+            <label for="tipType" data-testid="label-tip-type">Tip Type</label>
+            <select id="tipType" name="tipType" class="select" data-testid="select-tip-type" aria-label="Tip Type">
+              <option value="percent" data-testid="opt-tip-percent">Percentage</option>
+              <option value="flat" data-testid="opt-tip-flat">Flat Amount</option>
+            </select>
+          </div>
+          <div>
+            <label for="tipValue" data-testid="label-tip-value">Value</label>
+            <input id="tipValue" name="tipValue" class="input" data-testid="input-tip-value" aria-label="Tip Value" placeholder="10 or 50" autocomplete="off" />
+          </div>
+        </div>
+ 
+        <div id="tipButtons" class="btn-row" data-testid="tip-buttons" aria-label="Tip Buttons">
+          <button id="btnApplyTip" name="btnApplyTip" class="btn btn-primary" data-testid="btn-apply-tip" aria-label="Apply Tip">Apply Tip</button>
+          <button id="btnRemoveTip" name="btnRemoveTip" class="btn btn-secondary secondary" data-testid="btn-remove-tip" aria-label="Remove Tip">Remove Tip</button>
+        </div>
+      </section>
+ 
+      <hr />
+ 
+      <!-- CHECKOUT -->
+      <section id="checkoutSection" data-testid="section-checkout" aria-label="Checkout Section">
+        <h2 id="checkoutTitle" data-testid="checkout-title">Checkout / Pay</h2>
+ 
+        <div class="row" data-testid="checkout-row-1">
+          <div>
+            <label for="payMethod" data-testid="label-pay-method">Method</label>
+            <select id="payMethod" name="payMethod" class="select" data-testid="select-pay-method" aria-label="Payment Method">
+              <option value="CASH" data-testid="opt-pay-cash">CASH</option>
+              <option value="CARD" data-testid="opt-pay-card">CARD</option>
+              <option value="UPI" data-testid="opt-pay-upi">UPI</option>
+            </select>
+          </div>
+ 
+          <div id="cashBox" data-testid="cash-box" aria-label="Cash Payment Box">
+            <label for="cashReceived" data-testid="label-cash-received">Cash Received</label>
+            <input id="cashReceived" name="cashReceived" class="input" data-testid="input-cash-received" aria-label="Cash Received" placeholder="Enter cash amount" autocomplete="off" />
+          </div>
+        </div>
+ 
+        <div id="cardFields" data-testid="card-fields" aria-label="Card Fields" style="display:none; margin-top:10px;">
+          <div class="row" data-testid="card-row">
+            <div>
+              <label for="cardLast4" data-testid="label-card-last4">Card Last 4 Digits</label>
+              <input id="cardLast4" name="cardLast4" class="input" data-testid="input-card-last4" aria-label="Card Last 4 Digits" maxlength="4" placeholder="1234" autocomplete="off" />
+            </div>
+            <div>
+              <label for="cardPin" data-testid="label-card-pin">4-digit PIN</label>
+              <input id="cardPin" name="cardPin" class="input" data-testid="input-card-pin" aria-label="Card PIN" maxlength="4" placeholder="0000" autocomplete="off" />
+            </div>
+          </div>
+        </div>
+ 
+        <div id="checkoutButtons" class="btn-row" data-testid="checkout-buttons" aria-label="Checkout Buttons">
+          <button id="btnPayNow" name="btnPayNow" class="btn btn-primary" data-testid="btn-pay-now" aria-label="Pay Now">Pay Now</button>
+          <button id="btnPrintReceipt" name="btnPrintReceipt" class="btn btn-secondary secondary" data-testid="btn-print-receipt" aria-label="Print Receipt">Print Receipt</button>
+        </div>
+ 
+        <div id="msgRight" class="toast" data-testid="toast-right" aria-live="polite"></div>
+      </section>
+ 
+      <hr />
+ 
+   
+ 
+ 
